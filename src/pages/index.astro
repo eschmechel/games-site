@@ -1,149 +1,162 @@
 ---
-// keep the hero text-only for the <14 kB goal
-const featured = [
-  { title: "Tiny Platformer", reference: "/games/tiny-platformer" },
-  { title: "Cave Jam", reference: "/games/cave-jam" },
-  { title: "Puzzle #3", reference: "/games/puzzle-3" },
-];
-const posts = [
-  { title: "Week 4: Input polish", reference: "/blog/week-4" },
-  { title: "Postmortem: Runner", reference: "/blog/runner-postmortem" },
-  { title: "Godot WASM tips", reference: "/blog/godot-wasm" },
-];
+import Base from '../layouts/Base.astro';
+import ThemeToggle from '../components/ui/ThemeToggle.astro';
+import { games, type Game, posts as allPosts } from '../utils/dataTypes';
+
+// const featured = games.slice(0, 3);
+const shuffle = (arr: Game[]) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+const featured = shuffle(games).slice(0, Math.min(3, games.length));
+const posts = allPosts.slice(0, 3);
+
 const pageTitle = "20 Games Challenge";
+const description = "Building 20 games to level up my game dev skills";
+const progress = games.filter(game => game.status === 'complete').length;
+const total = 20;
+const percent = Math.max(0, Math.min(100, Math.round((progress / total) * 100)));
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" /><meta
-      name="viewport"
-      content="width=device-width,initial-scale=1"
-    />
-    <title>{pageTitle}</title>
-    <style>
-      :root {
-        /* Keep tokens in CSS so prefers-color-scheme works at runtime with zero JS */
-        --bg: #0f1923;
-        --fg: #e6e9f2;
-        --card: #141a2e;
-        --grad-light: linear-gradient(90deg, #e94e77, #f7c948);
-        --grad-dark: linear-gradient(
-          135deg,
-          #3ddc84 0%,
-          #e94e77 50%,
-          #f7c948 100%
-        );
-        --grad-universal: linear-gradient(
-          90deg,
-          rgba(233, 78, 119, 0.18),
-          rgba(247, 201, 72, 0.18)
-        );
-      }
-      @media (prefers-color-scheme: light) {
-        :root {
-          --bg: #f6f7fb;
-          --fg: #1c1f2a;
-          --card: #ffffff;
-        }
-      }
-      * {
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        margin: 0;
-        background: var(--bg);
-        color: var(--fg);
-        font:
-          16px/1.45 system-ui,
-          -apple-system,
-          Segoe UI,
-          Roboto,
-          Inter,
-          Arial,
-          sans-serif;
-      }
-      a {
-        color: inherit;
-        text-decoration: none;
-        border-bottom: 1px solid currentColor;
-      }
-      header,
-      main,
-      footer {
-        max-width: 820px;
-        margin: 0 auto;
-        padding: 16px;
-      }
-      .pill {
-        display: inline-block;
-        padding: 6px 10px;
-        border: 2px solid #222;
-        background: var(--card);
-        margin-right: 8px;
-      }
-      .hero {
-        border: 2px solid #222;
-        background: var(--card);
-        padding: 16px;
-        margin: 16px 0;
-        background-image: var(--grad-dark);
-        background-size: cover;
-      }
-      .bar {
-        height: 6px;
-        background: var(--grad-universal);
-        margin: 8px 0;
-      }
-      .grid {
-        display: grid;
-        gap: 8px;
-      }
-      @media (min-width: 720px) {
-        .grid {
-          grid-template-columns: repeat(3, 1fr);
-        }
-      }
-      .card {
-        padding: 12px;
-        border: 2px solid #222;
-        background: var(--card);
-      }
-      .muted {
-        opacity: 0.85;
-      }
-      footer {
-        opacity: 0.8;
-        border-top: 1px dashed rgba(255, 255, 255, 0.15);
-      }
-    </style>
-  </head>
-  <body>
+<Base title={pageTitle} description={description}>
+  <style>
+    a {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px solid currentColor;
+    }
+    a.pill, a.card { border-bottom: 0; }
+
+    header, main, footer {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill{
+      display:inline-block;padding:8px 12px;border:2px solid var(--border);
+      background:linear-gradient(180deg,var(--card),color-mix(in lab,var(--card) 88%,black));
+      box-shadow:0 1px 0 #00000040,inset 0 1px 0 #ffffff0d;
+      border-radius:6px;transition:transform .12s ease,background .2s ease,box-shadow .2s ease;
+    }
+    .pill:hover{ transform:translateY(-1px); box-shadow:0 2px 0 #00000040,inset 0 1px 0 #ffffff12; }
+
+    .hero {
+      position: relative;
+      border: 2px solid var(--border);
+      background: var(--card);
+      padding: 18px;
+      margin: 20px 0;
+      border-radius: 10px;
+      background-image: var(--grad-hero);
+      background-blend-mode: screen;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      box-shadow: inset 0 0 0 1px #ffffff0f;
+    }
+
+    /* Progress bar track + fill */
+    .bar{
+      position:relative;height:8px;border-radius:999px;margin:10px 0 14px;
+      background:color-mix(in lab,var(--card),black 18%); box-shadow:inset 0 -1px 0 #00000040; overflow:hidden;
+    }
+    .bar::before{
+      content:"";position:absolute;inset:0 auto 0 0;width:var(--progress,0%);
+      background:var(--grad-accent);border-radius:inherit;box-shadow:inset 0 -1px 0 #00000040;transition:width .25s ease;
+    }
+
+    .grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .card{
+      padding:14px 12px;border:2px solid var(--border);
+      background:linear-gradient(180deg,var(--card),color-mix(in lab,var(--card) 86%,black));
+      border-radius:8px;position:relative;transition:transform .12s ease,border-color .2s ease,box-shadow .2s ease;
+    }
+    .card::after{
+      content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--grad-accent);opacity:.5;
+      border-top-left-radius:6px;border-top-right-radius:6px;
+    }
+    .card:hover{ transform:translateY(-2px); border-color:color-mix(in lab,var(--border),var(--accent-cyan) 35%); box-shadow:0 6px 16px #00000040; }
+
+    .muted { color: var(--fg-muted); }
+
+    h1, h2 {
+      letter-spacing: .5px;
+      text-shadow: 0 1px 0 rgba(0,0,0,.15);
+      margin: .2em 0 .4em;
+    }
+
+    footer {
+      opacity: 0.85;
+      border-top: 1px dashed color-mix(in lab, var(--border), white 8%);
+    }
+  </style>
     <header>
       <nav>
-        <span class="pill">20 Games</span>
-        <a class="pill" href="/games">Games</a>
-        <a class="pill" href="/blog">Blog</a>
-        <a class="pill" href="/about">About</a>
+        <div class="nav-links">
+          <a class="pill" href="/">20 Games</a>
+          <a class="pill" href="/games">Games</a>
+          <a class="pill" href="/blog">Blog</a>
+          <a class="pill" href="/about">About</a>
+        </div>
+        <ThemeToggle />
       </nav>
     </header>
     <main>
+        <h1 style="margin:0;">{pageTitle}</h1>
+        <p class="muted">
+          Building 20 games to level up my game dev skills
+        </p>
       <section class="hero">
-        <h1 style="margin:0">Level Up: {pageTitle}</h1>
-        <div class="bar"></div>
+        <h1 style="margin:0;">Level Up: {pageTitle}</h1>
+        <div
+          class="bar"
+          role="progressbar"
+          aria-label="Progress"
+          aria-valuemin="0"
+          aria-valuemax={total}
+          aria-valuenow={progress}
+          style={`--progress:${percent}%`}
+        ></div>
         <p class="muted">
           Pixel-flavored, fast, readable. Web-playable builds, downloads,
           devlogs.
         </p>
-        <p><strong>Progress:</strong> 7 / 20 complete</p>
+        <p><strong>Progress:</strong> {progress} / {total} complete ({percent}%)</p>
       </section>
       <h2>Featured games</h2>
       <div class="grid">
         {
-          featured.map((g) => (
-            <a class="card" href={g.reference}>
-              {g.title} →
+          featured.map((game) => (
+            <a class="card" href={game.filePath}>
+              {game.title} →
             </a>
           ))
         }
@@ -151,9 +164,9 @@ const pageTitle = "20 Games Challenge";
       <h2>Latest devlogs</h2>
       <div class="grid">
         {
-          posts.map((p) => (
-            <a class="card" href={p.reference}>
-              {p.title} →
+          posts.map((post) => (
+            <a class="card" href={post.filePath}>
+              {post.title} →
             </a>
           ))
         }
@@ -161,10 +174,12 @@ const pageTitle = "20 Games Challenge";
     </main>
     <footer>
       <p>
-        Find me on <a href="https://github.com/">GitHub</a> · <a
-          href="https://itch.io/">itch.io</a
-        > · <a href="/rss.xml">RSS</a>
+        Find me on <a href="https://github.com/eschmechel">GitHub</a> · 
+        <a href="https://eragondev.itch.io">itch.io</a> · 
+        <a href="https://twitter.com/yourhandle">X / Twitter</a> ·
+        <a href="https://youtube.com/@yourchannel">YouTube</a> ·
+        <a href="https://twitch.tv/yourhandle">Twitch</a> ·
+        <a href="https://discord.gg/yourserver">Discord</a>
       </p>
     </footer>
-  </body>
-</html>
+</Base>

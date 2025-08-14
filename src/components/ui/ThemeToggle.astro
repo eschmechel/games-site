@@ -1,0 +1,84 @@
+---
+// ThemeToggle component for switching between light and dark themes
+---
+
+<button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+  <span class="theme-icon">🌙</span>
+</button>
+
+<style>
+  .theme-toggle {
+    display: inline-block;
+    padding: 8px 12px;
+    border: 2px solid var(--border);
+    background: linear-gradient(180deg, var(--card), color-mix(in lab, var(--card) 88%, black));
+    box-shadow:
+      0 1px 0 #00000040,
+      inset 0 1px 0 #ffffff0d;
+    border-radius: 6px;
+    transition: transform .12s ease, background .2s ease, box-shadow .2s ease;
+    color: var(--fg);
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .theme-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 2px 0 #00000040,
+      inset 0 1px 0 #ffffff12;
+  }
+  
+  .theme-toggle:focus-visible {
+    outline: 2px solid var(--accent-pink);
+    outline-offset: 2px;
+  }
+  
+  .theme-icon {
+    display: inline-block;
+    width: 16px;
+    text-align: center;
+  }
+</style>
+
+<script>
+  function initThemeToggle() {
+    const toggle = document.getElementById('theme-toggle');
+    const icon = toggle?.querySelector('.theme-icon') as HTMLElement | null;
+    
+    if (!toggle || !icon) return;
+
+    type Theme = 'dark' | 'light';
+
+    // Check for saved theme preference or default to dark
+    const savedTheme = localStorage.getItem('theme') as Theme | null;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const currentTheme: Theme = savedTheme || (prefersDark ? 'dark' : 'light');
+    
+    // Apply initial theme
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    updateIcon(currentTheme);
+    
+    // Toggle theme on click
+    toggle.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme') as Theme;
+      const newTheme: Theme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateIcon(newTheme);
+    });
+    
+    function updateIcon(theme: Theme) {
+      if (!icon) return;
+      icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+  }
+  
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initThemeToggle);
+  } else {
+    initThemeToggle();
+  }
+</script>

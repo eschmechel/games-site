@@ -1,0 +1,73 @@
+---
+export interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "20 Games Challenge - Building 20 games to level up my game dev skills" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          var prefersDark = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.setAttribute('data-theme', t || (prefersDark ? 'dark' : 'light'));
+        } catch (_) {
+          var prefersDark = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root{
+    --bg:#0e1320;--bg-2:#0b0f1a;--fg:#e9ecf5;--fg-muted:#c7cce0;--card:#121a2b;--border:#223047;
+    --accent-pink:#ff5ea8;--accent-gold:#f6d36b;--accent-emerald:#3ee07d;--accent-cyan:#4dd7ff;--accent-purple:#a987ff;
+
+    --grad-hero:
+      radial-gradient(1200px 500px at 10% -20%, #ff5ea840, transparent 60%),
+      radial-gradient(900px 400px at 90% 0%, #4dd7ff2e, transparent 60%),
+      radial-gradient(600px 300px at 50% 120%, #f6d36b2e, transparent 60%);
+    /* Accent gradient (fallback in sRGB) */
+    --grad-accent: linear-gradient(90deg, var(--accent-emerald), var(--accent-pink), var(--accent-gold));
+
+    /* Single composed page background */
+    --page-bg:
+      radial-gradient(1200px 70% at 50% 110%, #00000059, transparent 60%),
+      var(--grad-hero),
+      linear-gradient(180deg, var(--bg), var(--bg-2));
+  }
+
+  @supports (background: linear-gradient(in oklch, black, white)){
+    :root{ --grad-accent:linear-gradient(90deg in oklch, var(--accent-emerald), var(--accent-pink), var(--accent-gold)); }
+  }
+
+  /* Light/dark via data-theme only (set by tiny head script) */
+  :root[data-theme="light"]{ --bg:#f7f8fd;--bg-2:#fff;--fg:#1a1f2e;--fg-muted:#475069;--card:#fff;--border:#dfe4f2; }
+  :root[data-theme="dark"]{ --bg:#0e1320;--bg-2:#0b0f1a;--fg:#e9ecf5;--fg-muted:#c7cce0;--card:#121a2b;--border:#223047; }
+
+  *{box-sizing:border-box}
+
+  html{ background:var(--page-bg); background-repeat:no-repeat; background-color:var(--bg-2); min-height:100%; }
+
+  body{
+    margin:0;padding:0;min-height:100dvh;background:transparent;color:var(--fg);
+    font-family:system-ui,sans-serif;line-height:1.5;
+  }
+
+  *:focus-visible{ outline:2px solid var(--accent-pink); outline-offset:2px; }
+</style>

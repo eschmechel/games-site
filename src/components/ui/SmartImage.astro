@@ -1,0 +1,128 @@
+---
+// Smart image component with lazy loading and format optimization
+import type { ImageConfig } from '../../utils/imageUtils';
+
+export interface Props {
+  src: string;
+  alt: string;
+  config: ImageConfig;
+  loading?: 'lazy' | 'eager';
+  placeholder?: boolean;
+  sizes?: string;
+  class?: string;
+}
+
+const { 
+  src, 
+  alt, 
+  config,
+  loading = 'lazy', 
+  placeholder = true, 
+  sizes = `${config.width}px`,
+  class: className 
+} = Astro.props;
+
+// Extract config values
+const { width, height } = config;
+
+// Generate tiny SVG placeholder with static colors
+const placeholderSVG = `data:image/svg+xml;base64,${btoa(`
+  <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="${width}" height="${height}" fill="#121a2b" opacity="0.8"/>
+    <rect x="${width/2 - 20}" y="${height/2 - 10}" width="40" height="20" rx="4" fill="#c7cce0" opacity="0.4"/>
+    <text x="${width/2}" y="${height/2}" text-anchor="middle" dy="0.3em" fill="#c7cce0" font-family="sans-serif" font-size="12" opacity="0.6">Loading...</text>
+  </svg>
+`)}`;
+---
+
+<picture class={`smart-image ${className || ''}`}>
+  <!-- Fallback image -->
+  <img 
+    src={placeholder ? placeholderSVG : src}
+    data-src={src}
+    alt={alt}
+    width={width}
+    height={height}
+    loading={loading}
+    decoding="async"
+    sizes={sizes}
+    class={placeholder ? 'needs-load' : ''}
+  />
+</picture>
+
+{placeholder && (
+  <script>
+    // Progressive enhancement for placeholder replacement
+    document.addEventListener('DOMContentLoaded', () => {
+      const images = document.querySelectorAll('.smart-image img.needs-load');
+      
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const img = entry.target as HTMLImageElement;
+              const actualSrc = img.dataset.src;
+              
+              if (actualSrc) {
+                const newImg = new Image();
+                newImg.onload = () => {
+                  img.src = actualSrc;
+                  img.classList.remove('needs-load');
+                  img.classList.add('loaded');
+                };
+                newImg.onerror = () => {
+                  // Fallback if image fails to load
+                  img.classList.remove('needs-load');
+                  img.classList.add('error');
+                };
+                newImg.src = actualSrc;
+                observer.unobserve(img);
+              }
+            }
+          });
+        }, {
+          rootMargin: '50px'
+        });
+        
+        images.forEach(img => observer.observe(img));
+      } else {
+        // Fallback for older browsers
+        images.forEach(img => {
+          const actualSrc = (img as HTMLImageElement).dataset.src;
+          if (actualSrc) {
+            (img as HTMLImageElement).src = actualSrc;
+            img.classList.remove('needs-load');
+          }
+        });
+      }
+    });
+  </script>
+)}
+
+<style>
+  .smart-image {
+    display: block;
+    overflow: hidden;
+    border-radius: inherit;
+  }
+  
+  .smart-image img {
+    width: 100%;
+    height: auto;
+    transition: opacity 0.3s ease;
+    display: block;
+  }
+  
+  .smart-image img.needs-load {
+    opacity: 0.7;
+  }
+  
+  .smart-image img.loaded {
+    opacity: 1;
+  }
+  
+  .smart-image img.error {
+    opacity: 0.5;
+    filter: grayscale(100%);
+  }
+</style>

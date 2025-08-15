@@ -1,0 +1,369 @@
+---
+import Base from '../../layouts/Base.astro';
+import ThemeToggle from '../../components/ui/ThemeToggle.astro';
+import SmartImage from '../../components/ui/SmartImage.astro';
+import { games } from '../../utils/gameData';
+import { imageSizes } from '../../utils/imageUtils';
+import SocialFooter from '../../components/ui/SocialFooter.astro';
+
+const title = "Games Collection";
+const description = "All 20 games from the challenge - playable builds, downloads, and development notes";
+const completedGames = games.filter(game => game.status === 'complete');
+const inProgressGames = games.filter(game => game.status === 'in-progress');
+const plannedGames = games.filter(game => game.status === 'planned');
+const webPlayableGames = games.filter(game => game.webPlay && game.status === 'complete');
+const downloadableGames = games.filter(game => game.isDownloadable && game.status === 'complete');
+---
+
+<Base title={title} description={description}>
+  <style>
+    a {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px solid currentColor;
+    }
+    a.pill, a.card { border-bottom: 0; }
+
+    header, main, footer {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 8px 12px;
+      border: 2px solid var(--border);
+      background: linear-gradient(180deg, var(--card), color-mix(in lab, var(--card) 88%, black));
+      box-shadow:
+        0 1px 0 #00000040,
+        inset 0 1px 0 #ffffff0d;
+      border-radius: 6px;
+      transition: transform .12s ease, background .2s ease, box-shadow .2s ease;
+    }
+    .pill:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 2px 0 #00000040,
+        inset 0 1px 0 #ffffff12;
+    }
+
+    .hero {
+      position: relative;
+      border: 2px solid var(--border);
+      background: var(--card);
+      padding: 18px;
+      margin: 20px 0;
+      border-radius: 10px;
+      background-image: var(--grad-hero);
+      background-blend-mode: screen;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      box-shadow: inset 0 0 0 1px #ffffff0f;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .stat-card {
+      padding: 16px;
+      border: 2px solid var(--border);
+      background: linear-gradient(180deg, var(--card), color-mix(in lab, var(--card) 86%, black));
+      border-radius: 8px;
+      text-align: center;
+      position: relative;
+    }
+    .stat-card::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; top: 0;
+      height: 3px;
+      background: var(--grad-accent);
+      opacity: .5;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+    }
+
+    .stat-number {
+      font-size: 2em;
+      font-weight: bold;
+      color: var(--accent-pink);
+      margin: 0;
+    }
+
+    .stat-label {
+      color: var(--fg-muted);
+      margin: 4px 0 0;
+      font-size: 0.9em;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 32px 0 16px;
+    }
+    .section-header h2 {
+      margin: 0;
+      letter-spacing: .5px;
+      text-shadow: 0 1px 0 rgba(0,0,0,.15);
+    }
+    .status-badge {
+      font-size: 0.85em;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: var(--grad-accent);
+      color: var(--bg);
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      margin-bottom: 24px;
+    }
+
+    .card {
+      padding: 0;
+      border: 2px solid var(--border);
+      background: linear-gradient(180deg, var(--card), color-mix(in lab, var(--card) 86%, black));
+      border-radius: 8px;
+      position: relative;
+      transition: transform .12s ease, border-color .2s ease, box-shadow .2s ease;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-image {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-content {
+      padding: 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .card::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; top: 0;
+      height: 3px;
+      background: var(--grad-accent);
+      opacity: .5;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: color-mix(in lab, var(--border), var(--accent-cyan) 35%);
+      box-shadow: 0 6px 16px #00000040;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      letter-spacing: .5px;
+    }
+    .card p {
+      margin: 8px 0;
+      color: var(--fg-muted);
+      line-height: 1.4;
+    }
+    .card-meta {
+      font-size: 0.9em;
+      color: var(--fg-muted);
+      margin-top: 12px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .card-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--fg-muted);
+      font-style: italic;
+    }
+
+    .muted { color: var(--fg-muted); }
+
+    .hero .pill{
+      font-size: 0.9em;
+      padding: 6px 10px;
+    }
+    .hero div{
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 12px; 
+      margin-top: 12px;
+    }
+
+  </style>
+
+  <header>
+    <nav>
+      <div class="nav-links">
+        <a href="/" class="pill">Info</a>
+        <a href="/games" class="pill">Games</a>
+        <a href="/devlogs" class="pill">Devlogs</a>
+        <a href="/about" class="pill">About</a>
+      </div>
+      <ThemeToggle/>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1 style="margin:0;">Game Collection</h1>
+      <p class="muted">
+        All games I've made from the 20 Games Challenge.  
+        <div>
+          <span class="pill muted">🎮 Play online</span>
+          <span class="pill muted">💾 Download builds</span>
+          <span class="pill muted">📖 Read dev notes</span>
+          <span class="pill muted">👀 Peep source code</span>
+        </div>
+      </p>
+    </section>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">{completedGames.length}</div>
+        <div class="stat-label">Complete</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{inProgressGames.length}</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{plannedGames.length}</div>
+        <div class="stat-label">Planned</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{webPlayableGames.length}</div>
+        <div class="stat-label">Web Playable</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{downloadableGames.length}</div>
+        <div class="stat-label">Downloadable</div>
+      </div>
+    </div>
+
+    {completedGames.length > 0 && (
+      <>
+        <div class="section-header">
+          <h2>Completed Games</h2>
+          <span class="status-badge">✓ Complete</span>
+        </div>
+        <div class="grid">
+          {completedGames.map(game => (
+            <a href={game.filePath} class="card">
+              <SmartImage 
+                src={`/src/assets/images/games/${game.slug || game.title.toLowerCase().replace(/\s+/g, '-')}-thumbnail.webp`}
+                alt={`${game.title} Screenshot`}
+                config={imageSizes.card}
+                loading="lazy"
+                class="card-image"
+                placeholder={true}
+              />
+              <div class="card-content">
+                <h3>{game.title} - #{games.indexOf(game) + 1}</h3>
+                <p>{game.description}</p>
+                <div class="card-meta">
+                  <span>🎮 {game.engine}</span>
+                  <span>📅 {game.completedDate}</span>
+                  {game.webPlay && <span>🌐 Web-Play</span>}
+                  {game.isDownloadable && <span>💾 Downloadable</span>}
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </>
+    )}
+
+    {inProgressGames.length > 0 && (
+      <>
+        <div class="section-header">
+          <h2>In Progress</h2>
+          <span class="status-badge">🚧 WIP</span>
+        </div>
+        <div class="grid">
+          {inProgressGames.map(game => (
+            <a href={game.filePath} class="card">
+              <h3>{game.title} - #{games.indexOf(game) + 1}</h3>
+              <p>{game.description}</p>
+              <div class="card-meta">
+                <span>🎮 {game.engine}</span>
+                <span>🚧 In development</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </>
+    )}
+
+    {plannedGames.length > 0 && (
+      <>
+        <div class="section-header">
+          <h2>Planned Games</h2>
+          <span class="status-badge">📋 Planned</span>
+        </div>
+        <div class="grid">
+          {plannedGames.map(game => (
+            <div class="card" style="opacity: 0.7; cursor: default;">
+              <h3>{game.title} - #{games.indexOf(game) + 1}</h3>
+              <p>{game.description}</p>
+              <div class="card-meta">
+                <span>🎮 {game.engine}</span>
+                <span>📋 Coming soon</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    )}
+
+    {games.length === 0 && (
+      <div class="empty-state">
+        <p>No games yet. Check back soon!</p>
+      </div>
+    )}
+  </main>
+
+  <footer>
+    <SocialFooter/>
+  </footer>
+</Base>

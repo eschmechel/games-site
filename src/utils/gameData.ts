@@ -36,7 +36,7 @@ export const games: Game[] = [
     isDownloadable: true,
     engine: "Godot",
     completedDate: "",
-    description: "One button arcade game, comparitive to sisyphus",
+    description: "One button arcade game, comparative to sisyphus",
     tags: ["arcade", "casual", "relaxing"],
     filePath: "games/flappy-bird"
   },

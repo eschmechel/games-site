@@ -1,7 +1,9 @@
 ---
-import Base from '../layouts/Base.astro';
-import ThemeToggle from '../components/ui/ThemeToggle.astro';
-import { games, type Game, posts as allPosts } from '../utils/dataTypes';
+import Base from "../layouts/Base.astro";
+import ThemeToggle from "../components/ui/ThemeToggle.astro";
+import { posts as allPosts } from "../utils/devlogData";
+import { games, type Game } from "../utils/gameData";
+import SocialFooter from "../components/ui/SocialFooter.astro";
 
 // const featured = games.slice(0, 3);
 const shuffle = (arr: Game[]) => {
@@ -13,14 +15,29 @@ const shuffle = (arr: Game[]) => {
   return a;
 };
 
-const featured = shuffle(games).slice(0, Math.min(3, games.length));
+const completedGames = games.filter((game) => game.status === "complete");
+const featured =
+  completedGames.length > 0
+    ? shuffle(completedGames).slice(0, Math.min(3, completedGames.length))
+    : [];
+
 const posts = allPosts.slice(0, 3);
 
 const pageTitle = "20 Games Challenge";
 const description = "Building 20 games to level up my game dev skills";
-const progress = games.filter(game => game.status === 'complete').length;
+const progress = completedGames.length;
 const total = 20;
-const percent = Math.max(0, Math.min(100, Math.round((progress / total) * 100)));
+const percent = Math.max(
+  0,
+  Math.min(100, Math.round((progress / total) * 100)),
+);
+
+// Calculate days since challenge started
+const startDate = new Date("2025-08-05");
+const today = new Date();
+const daysSinceStart = Math.floor(
+  (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+);
 ---
 
 <Base title={pageTitle} description={description}>
@@ -30,9 +47,14 @@ const percent = Math.max(0, Math.min(100, Math.round((progress / total) * 100)))
       text-decoration: none;
       border-bottom: 1px solid currentColor;
     }
-    a.pill, a.card { border-bottom: 0; }
+    a.pill,
+    a.card {
+      border-bottom: 0;
+    }
 
-    header, main, footer {
+    header,
+    main,
+    footer {
       max-width: 960px;
       margin: 0 auto;
       padding: 16px;
@@ -50,20 +72,81 @@ const percent = Math.max(0, Math.min(100, Math.round((progress / total) * 100)))
       flex-wrap: wrap;
     }
 
-    .pill{
-      display:inline-block;padding:8px 12px;border:2px solid var(--border);
-      background:linear-gradient(180deg,var(--card),color-mix(in lab,var(--card) 88%,black));
-      box-shadow:0 1px 0 #00000040,inset 0 1px 0 #ffffff0d;
-      border-radius:6px;transition:transform .12s ease,background .2s ease,box-shadow .2s ease;
+    .pill {
+      display: inline-block;
+      padding: 8px 12px;
+      border: 2px solid var(--border);
+      background: linear-gradient(
+        180deg,
+        var(--card),
+        color-mix(in lab, var(--card) 88%, black)
+      );
+      box-shadow:
+        0 1px 0 #00000040,
+        inset 0 1px 0 #ffffff0d;
+      border-radius: 6px;
+      transition:
+        transform 0.12s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
     }
-    .pill:hover{ transform:translateY(-1px); box-shadow:0 2px 0 #00000040,inset 0 1px 0 #ffffff12; }
+    .pill:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 2px 0 #00000040,
+        inset 0 1px 0 #ffffff12;
+    }
+
+    .days-counter {
+      text-align: center;
+      margin: 16px 0 8px;
+      padding: 12px 20px;
+      border: 2px solid var(--border);
+      background: linear-gradient(
+        135deg,
+        var(--card),
+        color-mix(in lab, var(--card) 90%, var(--accent-pink) 8%)
+      );
+      border-radius: 8px;
+      font-size: 0.95em;
+      color: var(--fg-muted);
+      position: relative;
+      overflow: hidden;
+    }
+    .days-counter::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 3px;
+      background: var(--grad-accent);
+      opacity: 0.6;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+    }
+
+    .days-number {
+      font-weight: bold;
+      color: var(--accent-pink);
+    }
+
+    @keyframes gradientShift {
+      0%,
+      100% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+    }
 
     .hero {
       position: relative;
       border: 2px solid var(--border);
       background: var(--card);
       padding: 18px;
-      margin: 20px 0;
+      margin: 12px 0 20px;
       border-radius: 10px;
       background-image: var(--grad-hero);
       background-blend-mode: screen;
@@ -79,13 +162,39 @@ const percent = Math.max(0, Math.min(100, Math.round((progress / total) * 100)))
     }
 
     /* Progress bar track + fill */
-    .bar{
-      position:relative;height:8px;border-radius:999px;margin:10px 0 14px;
-      background:color-mix(in lab,var(--card),black 18%); box-shadow:inset 0 -1px 0 #00000040; overflow:hidden;
+    .bar {
+      position: relative;
+      height: 8px;
+      border-radius: 999px;
+      margin: 10px 0 14px;
+      background: color-mix(in lab, var(--card), black 18%);
+      box-shadow: inset 0 -1px 0 #00000040;
+      overflow: hidden;
     }
-    .bar::before{
-      content:"";position:absolute;inset:0 auto 0 0;width:var(--progress,0%);
-      background:var(--grad-accent);border-radius:inherit;box-shadow:inset 0 -1px 0 #00000040;transition:width .25s ease;
+    .bar::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: var(--progress, 0%);
+      background: var(--grad-accent);
+      border-radius: inherit;
+      box-shadow: inset 0 -1px 0 #00000040;
+      transition: width 0.25s ease;
+    }
+
+    .challenge-info {
+      /* Remove the max-width and centering to match grid width */
+      margin: 32px 0;
+      line-height: 1.6;
+    }
+
+    .challenge-info h3 {
+      color: var(--accent-pink);
+      margin: 1.5em 0 0.5em;
+    }
+
+    .challenge-info h4 {
+      margin: 1.2em 0 0.3em;
     }
 
     .grid {
@@ -94,92 +203,213 @@ const percent = Math.max(0, Math.min(100, Math.round((progress / total) * 100)))
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     }
 
-    .card{
-      padding:14px 12px;border:2px solid var(--border);
-      background:linear-gradient(180deg,var(--card),color-mix(in lab,var(--card) 86%,black));
-      border-radius:8px;position:relative;transition:transform .12s ease,border-color .2s ease,box-shadow .2s ease;
+    .card {
+      padding: 14px 12px;
+      border: 2px solid var(--border);
+      background: linear-gradient(
+        180deg,
+        var(--card),
+        color-mix(in lab, var(--card) 86%, black)
+      );
+      border-radius: 8px;
+      position: relative;
+      transition:
+        transform 0.12s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
     }
-    .card::after{
-      content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--grad-accent);opacity:.5;
-      border-top-left-radius:6px;border-top-right-radius:6px;
+    .card::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 3px;
+      background: var(--grad-accent);
+      opacity: 0.5;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
     }
-    .card:hover{ transform:translateY(-2px); border-color:color-mix(in lab,var(--border),var(--accent-cyan) 35%); box-shadow:0 6px 16px #00000040; }
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: color-mix(in lab, var(--border), var(--accent-cyan) 35%);
+      box-shadow: 0 6px 16px #00000040;
+    }
 
-    .muted { color: var(--fg-muted); }
-
-    h1, h2 {
-      letter-spacing: .5px;
-      text-shadow: 0 1px 0 rgba(0,0,0,.15);
-      margin: .2em 0 .4em;
+    .placeholder-card {
+      padding: 20px;
+      border: 2px dashed var(--border);
+      background: color-mix(in lab, var(--card), transparent 50%);
+      border-radius: 8px;
+      text-align: center;
+      color: var(--fg-muted);
+      position: relative;
     }
 
-    footer {
-      opacity: 0.85;
-      border-top: 1px dashed color-mix(in lab, var(--border), white 8%);
+    .placeholder-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      opacity: 0.7;
     }
+
+    .muted {
+      color: var(--fg-muted);
+    }
+
+    h1,
+    h2 {
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+      margin: 0.2em 0 0.4em;
+    }
+s
   </style>
-    <header>
-      <nav>
-        <div class="nav-links">
-          <a class="pill" href="/">20 Games</a>
-          <a class="pill" href="/games">Games</a>
-          <a class="pill" href="/blog">Blog</a>
-          <a class="pill" href="/about">About</a>
-        </div>
-        <ThemeToggle />
-      </nav>
-    </header>
-    <main>
-        <h1 style="margin:0;">{pageTitle}</h1>
-        <p class="muted">
-          Building 20 games to level up my game dev skills
-        </p>
-      <section class="hero">
-        <h1 style="margin:0;">Level Up: {pageTitle}</h1>
-        <div
-          class="bar"
-          role="progressbar"
-          aria-label="Progress"
-          aria-valuemin="0"
-          aria-valuemax={total}
-          aria-valuenow={progress}
-          style={`--progress:${percent}%`}
-        ></div>
-        <p class="muted">
-          Pixel-flavored, fast, readable. Web-playable builds, downloads,
-          devlogs.
-        </p>
-        <p><strong>Progress:</strong> {progress} / {total} complete ({percent}%)</p>
-      </section>
-      <h2>Featured games</h2>
-      <div class="grid">
-        {
-          featured.map((game) => (
+
+  <header>
+    <nav>
+      <div class="nav-links">
+        <a class="pill" href="/">Info</a>
+        <a class="pill" href="/games">Games</a>
+        <a class="pill" href="/devlogs">Devlogs</a>
+        <a class="pill" href="/about">About</a>
+      </div>
+      <ThemeToggle/>
+    </nav>
+  </header>
+  <main>
+    <div class="days-counter">
+      📅 Day <span class="days-number">{daysSinceStart}</span> of the challenge
+    </div>
+
+    <section class="hero">
+      <h1 style="margin:0;">Level Up: {pageTitle}</h1>
+      <div
+        class="bar"
+        role="progressbar"
+        aria-label="Progress"
+        aria-valuemin="0"
+        aria-valuemax={total}
+        aria-valuenow={progress}
+        style={`--progress:${percent}%`}
+      >
+      </div>
+      <p class="muted">
+        Pixel-flavored, Fast, Readable. Web-playable builds, Downloads, & Devlogs.
+      </p>
+      <p>
+        <strong>Progress:</strong>
+        {progress} / {total} complete ({percent}%)
+      </p>
+    </section>
+
+    <h2>Featured games</h2>
+    {
+      featured.length > 0 ? (
+        <div class="grid">
+          {featured.map((game) => (
             <a class="card" href={game.filePath}>
               {game.title} →
             </a>
-          ))
-        }
-      </div>
-      <h2>Latest devlogs</h2>
-      <div class="grid">
-        {
+          ))}
+        </div>
+      ) : (
+        <div class="placeholder-grid">
+          <div class="placeholder-card">
+            <p style="margin: 0; font-style: italic;">
+              🚧 First game in progress...
+            </p>
+            <p style="margin: 8px 0 0; font-size: 0.9em;">
+              Check back soon for completed games!
+            </p>
+          </div>
+          <div class="placeholder-card">
+            <p style="margin: 0; font-style: italic;">🎮 Game #2 coming soon</p>
+            <p style="margin: 8px 0 0; font-size: 0.9em;">
+              Follow the devlogs for updates
+            </p>
+          </div>
+          <div class="placeholder-card">
+            <p style="margin: 0; font-style: italic;">🎯 Game #3 planned</p>
+            <p style="margin: 8px 0 0; font-size: 0.9em;">
+              More games on the way!
+            </p>
+          </div>
+        </div>
+      )
+    }
+
+    <h2>Latest devlogs</h2>
+    <div class="grid">
+      {
+        posts.length > 0 ? (
           posts.map((post) => (
             <a class="card" href={post.filePath}>
               {post.title} →
             </a>
           ))
-        }
-      </div>
-    </main>
-    <footer>
+        ) : (
+          <div class="placeholder-card">
+            <p style="margin: 0; font-style: italic;">
+              🚧 No devlogs yet...
+            </p>
+            <p style="margin: 8px 0 0; font-size: 0.9em;">
+              Check back soon for updates!
+            </p>
+          </div>
+        )
+      }
+    </div>
+
+    <div class="challenge-info">
+      <h2>The Challenge</h2>
       <p>
-        Find me on <a href="https://github.com/eschmechel">GitHub</a> · 
-        <a href="https://eragondev.itch.io">itch.io</a> · 
-        <a href="https://twitter.com/yourhandle">X / Twitter</a> ·
-        <a href="https://youtube.com/@yourchannel">YouTube</a> ·
-        <a href="https://twitch.tv/yourhandle">Twitch</a> ·
-        <a href="https://discord.gg/yourserver">Discord</a>
+        The 20 Games Challenge is a year-long journey to build 20 complete
+        games, focusing on finishing projects and learning new skills. Each game
+        is designed to explore different mechanics, genres, and technical
+        challenges.
       </p>
-    </footer>
+
+      <p>
+        Every game is built with web deployment in mind - meaning fast load
+        times, efficient bundles, and playable experiences that work across
+        devices. The goal isn't just to make games, but to make them accessible.
+      </p>
+
+      <h3>Rules & Constraints</h3>
+      <h4>Challenge Rules</h4>
+      <ul>
+        <li>
+          <strong>No tutorials:</strong> Don't follow full tutorials; quick Q&A is
+          fine
+        </li>
+        <li>
+          <strong>Constrain yourself:</strong> Set limits and move on — polish later
+        </li>
+        <li><strong>Be flexible:</strong> Adapt and change plans as needed</li>
+      </ul>
+      <h4>Personal Rules</h4>
+      <ul>
+        <li>
+          <strong>Ship it:</strong> Every game must be playable and "done"
+        </li>
+        <li>
+          <strong>Web-first:</strong> All games should run in browsers when possible
+        </li>
+        <li>
+          <strong>Time-boxed:</strong> Most games are built in 1-2 week sprints
+        </li>
+        <li>
+          <strong>Learn something:</strong> Each project should teach a new skill
+          or technique
+        </li>
+        <li>
+          <strong>Document it:</strong> Write devlogs and postmortems for reflection
+        </li>
+      </ul>
+    </div>
+  </main>
+  <footer>
+    <SocialFooter/>
+  </footer>
 </Base>

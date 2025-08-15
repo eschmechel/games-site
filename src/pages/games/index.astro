@@ -1,16 +1,21 @@
 ---
 import Base from '../../layouts/Base.astro';
 import ThemeToggle from '../../components/ui/ThemeToggle.astro';
-import { games } from '../../utils/dataTypes';
+import SmartImage from '../../components/ui/SmartImage.astro';
+import { games } from '../../utils/gameData';
+import { imageSizes } from '../../utils/imageUtils';
+import SocialFooter from '../../components/ui/SocialFooter.astro';
 
-const pageTitle = "Games";
+const title = "Games Collection";
 const description = "All 20 games from the challenge - playable builds, downloads, and development notes";
 const completedGames = games.filter(game => game.status === 'complete');
 const inProgressGames = games.filter(game => game.status === 'in-progress');
 const plannedGames = games.filter(game => game.status === 'planned');
+const webPlayableGames = games.filter(game => game.webPlay && game.status === 'complete');
+const downloadableGames = games.filter(game => game.isDownloadable && game.status === 'complete');
 ---
 
-<Base title={pageTitle} description={description}>
+<Base title={title} description={description}>
   <style>
     a {
       color: inherit;
@@ -75,6 +80,45 @@ const plannedGames = games.filter(game => game.status === 'planned');
       box-shadow: inset 0 0 0 1px #ffffff0f;
     }
 
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .stat-card {
+      padding: 16px;
+      border: 2px solid var(--border);
+      background: linear-gradient(180deg, var(--card), color-mix(in lab, var(--card) 86%, black));
+      border-radius: 8px;
+      text-align: center;
+      position: relative;
+    }
+    .stat-card::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; top: 0;
+      height: 3px;
+      background: var(--grad-accent);
+      opacity: .5;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+    }
+
+    .stat-number {
+      font-size: 2em;
+      font-weight: bold;
+      color: var(--accent-pink);
+      margin: 0;
+    }
+
+    .stat-label {
+      color: var(--fg-muted);
+      margin: 4px 0 0;
+      font-size: 0.9em;
+    }
+
     .section-header {
       display: flex;
       align-items: center;
@@ -103,12 +147,29 @@ const plannedGames = games.filter(game => game.status === 'planned');
     }
 
     .card {
-      padding: 16px;
+      padding: 0;
       border: 2px solid var(--border);
       background: linear-gradient(180deg, var(--card), color-mix(in lab, var(--card) 86%, black));
       border-radius: 8px;
       position: relative;
       transition: transform .12s ease, border-color .2s ease, box-shadow .2s ease;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-image {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-content {
+      padding: 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
     .card::after {
       content: "";
@@ -158,22 +219,28 @@ const plannedGames = games.filter(game => game.status === 'planned');
 
     .muted { color: var(--fg-muted); }
 
-    footer {
-      opacity: 0.85;
-      border-top: 1px dashed color-mix(in lab, var(--border), white 8%);
-      margin-top: 48px;
+    .hero .pill{
+      font-size: 0.9em;
+      padding: 6px 10px;
     }
+    .hero div{
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 12px; 
+      margin-top: 12px;
+    }
+
   </style>
 
   <header>
     <nav>
       <div class="nav-links">
-        <a href="/" class="pill">20 Games</a>
+        <a href="/" class="pill">Info</a>
         <a href="/games" class="pill">Games</a>
-        <a href="/blog" class="pill">Blog</a>
+        <a href="/devlogs" class="pill">Devlogs</a>
         <a href="/about" class="pill">About</a>
       </div>
-      <ThemeToggle />
+      <ThemeToggle/>
     </nav>
   </header>
 
@@ -181,10 +248,38 @@ const plannedGames = games.filter(game => game.status === 'planned');
     <section class="hero">
       <h1 style="margin:0;">Game Collection</h1>
       <p class="muted">
-        All games from the 20 Games Challenge. Play online, download builds, and read development notes.
+        All games I've made from the 20 Games Challenge.  
+        <div>
+          <span class="pill muted">🎮 Play online</span>
+          <span class="pill muted">💾 Download builds</span>
+          <span class="pill muted">📖 Read dev notes</span>
+          <span class="pill muted">👀 Peep source code</span>
+        </div>
       </p>
-      <p><strong>Progress:</strong> {completedGames.length} complete, {inProgressGames.length} in progress, {plannedGames.length} planned</p>
     </section>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">{completedGames.length}</div>
+        <div class="stat-label">Complete</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{inProgressGames.length}</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{plannedGames.length}</div>
+        <div class="stat-label">Planned</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{webPlayableGames.length}</div>
+        <div class="stat-label">Web Playable</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{downloadableGames.length}</div>
+        <div class="stat-label">Downloadable</div>
+      </div>
+    </div>
 
     {completedGames.length > 0 && (
       <>
@@ -195,13 +290,23 @@ const plannedGames = games.filter(game => game.status === 'planned');
         <div class="grid">
           {completedGames.map(game => (
             <a href={game.filePath} class="card">
-              <h3>{game.title}</h3>
-              <p>{game.description}</p>
-              <div class="card-meta">
-                <span>🎮 {game.engine}</span>
-                <span>📅 {game.completedDate}</span>
-                {game.webPlay && <span>🌐 Playable</span>}
-                {game.isDownloadable && <span>💾 Downloadable</span>}
+              <SmartImage 
+                src={`/src/assets/images/games/${game.slug || game.title.toLowerCase().replace(/\s+/g, '-')}-thumbnail.webp`}
+                alt={`${game.title} Screenshot`}
+                config={imageSizes.card}
+                loading="lazy"
+                class="card-image"
+                placeholder={true}
+              />
+              <div class="card-content">
+                <h3>{game.title} - #{games.indexOf(game) + 1}</h3>
+                <p>{game.description}</p>
+                <div class="card-meta">
+                  <span>🎮 {game.engine}</span>
+                  <span>📅 {game.completedDate}</span>
+                  {game.webPlay && <span>🌐 Web-Play</span>}
+                  {game.isDownloadable && <span>💾 Downloadable</span>}
+                </div>
               </div>
             </a>
           ))}
@@ -218,7 +323,7 @@ const plannedGames = games.filter(game => game.status === 'planned');
         <div class="grid">
           {inProgressGames.map(game => (
             <a href={game.filePath} class="card">
-              <h3>{game.title}</h3>
+              <h3>{game.title} - #{games.indexOf(game) + 1}</h3>
               <p>{game.description}</p>
               <div class="card-meta">
                 <span>🎮 {game.engine}</span>
@@ -239,7 +344,7 @@ const plannedGames = games.filter(game => game.status === 'planned');
         <div class="grid">
           {plannedGames.map(game => (
             <div class="card" style="opacity: 0.7; cursor: default;">
-              <h3>{game.title}</h3>
+              <h3>{game.title} - #{games.indexOf(game) + 1}</h3>
               <p>{game.description}</p>
               <div class="card-meta">
                 <span>🎮 {game.engine}</span>
@@ -259,6 +364,6 @@ const plannedGames = games.filter(game => game.status === 'planned');
   </main>
 
   <footer>
-    <p>Find me on <a href="https://github.com/username">GitHub</a> · <a href="https://itch.io/profile">itch.io</a> · <a href="/feed.xml">RSS</a></p>
+    <SocialFooter/>
   </footer>
 </Base>

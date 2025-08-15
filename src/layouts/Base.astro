@@ -15,6 +15,14 @@ const { title, description, image, type, canonicalUrl } = Astro.props;
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+        // Blocking script to prevent theme flash
+        (function() {
+            const saved = localStorage.getItem('theme');
+            const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     <Head 
       title={title}
       description={description}
